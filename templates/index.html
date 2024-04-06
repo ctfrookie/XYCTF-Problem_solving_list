@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>封神榜</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 引入Bootstrap库的CSS文件 -->
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+  /* 添加一些基本样式 */
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+
+  h1 {
+    color: #333;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-gap: 10px;
+  }
+
+  .item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  /* 添加进度条样式 */
+  .progress {
+    height: 20px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background-color: #4caf50;
+    border-radius: 4px;
+  }
+
+  /* 添加标签样式 */
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    margin-bottom: 5px;
+  }
+
+  .tag-label {
+    display: inline-block;
+    padding: 4px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 8px;
+  }
+
+  .container,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl,
+  .container-xxl {
+    max-width: 1920px;
+  }
+
+  .fsb {
+    font-family: Arial, sans-serif;
+    border: 1px solid #ff9900;
+    padding: 10px;
+    background-color: #f9f9f9;
+  }
+</style>
+
+<body>
+  <div class="container">
+
+    <div class="item">
+
+      <h2>题目统计</h2>
+      <p>题目总数: {{ total_count }}</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>题目</th>
+            <th>已解决</th>
+            <th>标签</th>
+            <th>一血</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for challenge in challenges %}
+          <tr>
+            <td>{{ challenge[0] }}</td>
+            <td>{{ challenge[1]['solved'] }}</td>
+            <td>{{ challenge[1]['tags'] }}</td>
+            <td>
+              {% if blood_names.get(challenge[0]) %}
+              {{ blood_names[challenge[0]][0] }}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="item">
+      <h2>标签统计</h2>
+      <ul>
+        {% for tag, count in tag_counts.items() %}
+        <li>
+          <span class="tag-label">{{ tag }}</span>
+          <div class="progress">
+            <div class="progress-bar" style="width: {{ count/total_count*100 }}%">{{ count }}</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      <!-- Modal -->
+      <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="chartModalLabel">放大图表</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <canvas id="zoomedRadarChart" width="800" height="800"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Add zoom button -->
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#chartModal">
+        🔍
+      </button>
+      <canvas id="radarChart" width="400" height="400"></canvas>
+
+    </div>
+  </div>
+
+  <!-- 引入Chart.js雷达图效果js文件 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+  <!-- 引入Bootstrap库的JS文件，用于一些交互效果 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.min.js"></script>
+  <script>
+    var labels = {{ labels| safe }};
+    var datasetData = {{ dataset_data| safe }};
+    // Create the radar chart
+    var ctx = document.getElementById('radarChart').getContext('2d');
+    var radarChart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'XYCTF',
+          data: datasetData,
+          backgroundColor: 'rgba(75, 192, 192, 0.4)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        scales: {
+          r: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    // Zoom in on the radar chart
+    var zoomedCtx = document.getElementById('zoomedRadarChart').getContext('2d');
+    var zoomedRadarChart = new Chart(zoomedCtx, {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'XYCTF',
+          data: datasetData,
+          backgroundColor: 'rgba(75, 192, 192, 0.4)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        scales: {
+          r: {
+            suggestedMin: 0,
+            suggestedMax: 100
+          }
+        },
+        plugins: {
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'xy'
+            },
+            zoom: {
+              enabled: true,
+              mode: 'xy'
+            }
+          }
+        }
+      }
+    });
+    // Update the zoomed chart when the modal is shown
+    var chartModal = document.getElementById('chartModal');
+    chartModal.addEventListener('show.bs.modal', function () {
+      zoomedRadarChart.update();
+    });
+  </script>
+</body>
+
+</html>
