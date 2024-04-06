@@ -50,4 +50,6 @@ docker run -d -p 80:80 --name my-container myxy
 │  └─templates			#网页模板的文件夹
 │          index.html	#网页模板的文件
 ```
+### 四.效果图
+![image](https://github.com/ctfrookie/XYCTF-Problem_solving_list/assets/112057820/e2e2e845-193d-4db8-994a-a5afe2620636)
 
