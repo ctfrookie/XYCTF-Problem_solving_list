@@ -30,13 +30,13 @@ Press CTRL+C to quit
 使用以下命令构建镜像：
 
 ```dockerfile
-dockerfiledocker build -t myxy .
+docker build -t myxy .
 ```
 
 然后通过以下命令运行容器：
 
 ```dockerfile
-dockerfiledocker run -d -p 80:80 --name my-container myxy
+docker run -d -p 80:80 --name my-container myxy
 ```
 
 ### 三.文件列表
